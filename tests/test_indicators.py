@@ -1,7 +1,5 @@
 # coding: utf-8
 
-import pytest
-
 from dateutil.parser import parse
 from pycti import OpenCTIApiClient
 from stix2 import TLP_AMBER, TLP_GREEN
