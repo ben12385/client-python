@@ -25,6 +25,20 @@ jobs:
       - run:
           name: flake8
           command: flake8 --ignore=E,W ~/repo
+  tests:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: install dependencies
+          command: pip3 install -r requirements.txt --user
+      - run:
+          name: install pytest
+          command: pip3 install pytest pytest-cov --user
+      - run:
+          name: run pytest
+          command: python3 -m pytest --cov=pycti
   build:
     working_directory: ~/opencti-client
     docker:
@@ -74,6 +88,7 @@ workflows:
     jobs:
       - ensure_formatting
       - linter
+      - tests
   opencti_client_python:
     jobs:
       - build:
