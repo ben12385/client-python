@@ -5,70 +5,58 @@ from pycti import OpenCTIApiClient
 from stix2 import TLP_AMBER, TLP_GREEN
 
 
-def test_indicator_creation():
-    # Variables
-    api_url = "https://demo.opencti.io"
-    api_token = "2b4f29e3-5ea8-4890-8cf5-a76f61f1e2b2"
+class TestIndicators:
+    def test_create_indicator(self):
+        opencti_api_client = OpenCTIApiClient(
+            "https://demo.opencti.io",
+            "2b4f29e3-5ea8-4890-8cf5-a76f61f1e2b2",
+            ssl_verify=True,
+        )
+        # Define the date
+        date = parse("2019-12-01").strftime("%Y-%m-%dT%H:%M:%SZ")
+        # Create the indicator
+        indicator = opencti_api_client.indicator.create(
+            name="C2 server of the new campaign",
+            description="This is the C2 server of the campaign",
+            pattern_type="stix",
+            indicator_pattern="[domain-name:value = 'www.5z8.info' AND domain-name:resolves_to_refs[*].value = '198.51.100.1/32']",
+            main_observable_type="IPv4-Addr",
+            valid_from=date,
+            markingDefinitions=[TLP_AMBER["id"], TLP_GREEN["id"]],
+        )
+        print(indicator)
 
-    # OpenCTI initialization
-    opencti_api_client = OpenCTIApiClient(api_url, api_token, ssl_verify=True)
+        assert indicator["id"] is not None or indicator["id"] != ""
 
-    # Define the date
-    date = parse("2019-12-01").strftime("%Y-%m-%dT%H:%M:%SZ")
+    def test_get_100_indicators_with_pagination(self):
+        opencti_api_client = OpenCTIApiClient(
+            "https://demo.opencti.io",
+            "2b4f29e3-5ea8-4890-8cf5-a76f61f1e2b2",
+            ssl_verify=True,
+        )
 
-    # Create the Campaign
-    campaign = opencti_api_client.campaign.create(
-        name="My new Campaign",
-        description="Large SpearPhishing and intrusions followed by ransomware",
-        objective="Financial gain",
-        first_seen=date,
-        last_seen=date,
-        update=True,
-    )
-    print(campaign)
+        # Get all reports using the pagination
+        custom_attributes = """
+            id
+            indicator_pattern
+            created
+        """
 
-    assert campaign["id"] is not None or campaign["id"] != ""
+        final_indicators = []
+        data = opencti_api_client.indicator.list(
+            first=50, customAttributes=custom_attributes, withPagination=True
+        )
+        final_indicators = final_indicators + data["entities"]
 
-    # Create the indicator
-    indicator = opencti_api_client.indicator.create(
-        name="C2 server of the new campaign",
-        description="This is the C2 server of the campaign",
-        pattern_type="stix",
-        indicator_pattern="[domain-name:value = 'www.5z8.info' AND domain-name:resolves_to_refs[*].value = '198.51.100.1/32']",
-        main_observable_type="IPv4-Addr",
-        valid_from=date,
-        markingDefinitions=[TLP_AMBER["id"], TLP_GREEN["id"]],
-    )
-    print(indicator)
+        assert len(final_indicators) == 50
 
-    assert indicator["id"] is not None or indicator["id"] != ""
+        after = data["pagination"]["endCursor"]
+        data = opencti_api_client.indicator.list(
+            first=50,
+            after=after,
+            customAttributes=custom_attributes,
+            withPagination=True,
+        )
+        final_indicators = final_indicators + data["entities"]
 
-    # Create the relation
-    relation = opencti_api_client.stix_relation.create(
-        fromType="Indicator",
-        fromId=indicator["id"],
-        toType="Campaign",
-        toId=campaign["id"],
-        relationship_type="indicates",
-        first_seen=date,
-        last_seen=date,
-        description="This is the C2 server of the campaign.",
-    )
-    print(relation)
-
-    assert relation["id"] is not None or relation["id"] != ""
-
-    # Create the observables (optional)
-    observable_1 = opencti_api_client.stix_observable.create(
-        type="Domain", observable_value="www.5z8.info"
-    )
-    observable_2 = opencti_api_client.stix_observable.create(
-        type="IPv4-Addr", observable_value="198.51.100.1"
-    )
-    # Create the relation between observables and the indicator
-    opencti_api_client.indicator.add_stix_observable(
-        id=indicator["id"], stix_observable_id=observable_1["id"]
-    )
-    opencti_api_client.indicator.add_stix_observable(
-        id=indicator["id"], stix_observable_id=observable_2["id"]
-    )
+        assert len(final_indicators) == 100
