@@ -13,3 +13,4 @@ examples/*.json
 examples/*.pdf
 docs/_build
 .coverage
+Pipfile*
