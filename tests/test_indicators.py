@@ -3,7 +3,7 @@
 import json
 from dateutil.parser import parse
 from pycti import OpenCTIApiClient
-from stix2 import TLP_AMBER, TLP_GREEN
+from stix2 import TLP_WHITE, TLP_GREEN
 
 import pytest
 
@@ -22,6 +22,13 @@ def test_indicator(api_client):
     # Define the date
     date = parse("2019-12-01").strftime("%Y-%m-%dT%H:%M:%SZ")
     date2 = parse("2021-12-01").strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    marking_definition_green = api_client.marking_definition.read(
+        id=TLP_GREEN["id"]
+    )
+    marking_definition_white = api_client.marking_definition.read(
+        id=TLP_WHITE["id"]
+    )
 
     # Create the organization
     organization = api_client.identity.create(
@@ -42,7 +49,10 @@ def test_indicator(api_client):
         modified=date,
         tags=["Test1", "Test2"],
         createdByRef=organization["id"],
-        markingDefinitions=[TLP_AMBER["id"], TLP_GREEN["id"]],
+        markingDefinitions=[
+            marking_definition_green["id"],
+            marking_definition_white["id"],
+        ],
         update=True,
         # TODO: killChainPhases
     )
