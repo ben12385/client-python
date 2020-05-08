@@ -23,12 +23,8 @@ def test_indicator(api_client):
     date = parse("2019-12-01").strftime("%Y-%m-%dT%H:%M:%SZ")
     date2 = parse("2021-12-01").strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    marking_definition_green = api_client.marking_definition.read(
-        id=TLP_GREEN["id"]
-    )
-    marking_definition_white = api_client.marking_definition.read(
-        id=TLP_WHITE["id"]
-    )
+    marking_definition_green = api_client.marking_definition.read(id=TLP_GREEN["id"])
+    marking_definition_white = api_client.marking_definition.read(id=TLP_WHITE["id"])
 
     # Create the organization
     organization = api_client.identity.create(
