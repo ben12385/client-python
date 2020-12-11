@@ -521,6 +521,78 @@ class OpenCTIApiClient:
             )
             return None
 
+    def upload_file_with_id(self, **kwargs):
+        """upload a file to OpenCTI API
+
+        :param `**kwargs`: arguments for file upload (required: `file_name` and `data`)
+        :return: returns the query respons for the file upload
+        :rtype: dict
+        """
+
+        file_name = kwargs.get("file_name", None)
+        data = kwargs.get("data", None)
+        report_id = kwargs.get("id", None)
+        mime_type = kwargs.get("mime_type", "text/plain")
+        if file_name is not None:
+            self.log("info", "Uploading a file.")
+            query = """
+		mutation FileUploaderGlobalMutation(,
+		  $id: ID!,
+		  $file: Upload!,
+		) {,
+		  stixDomainEntityEdit(id: $id) {,
+		    importPush(file: $file) {,
+		      ...FileLine_file,
+		      id,
+		    },
+		  },
+		},
+		,
+		fragment FileLine_file on File {,
+		  id,
+		  name,
+		  uploadStatus,
+		  lastModified,
+		  lastModifiedSinceMin,
+		  metaData {,
+		    category,
+		    mimetype,
+		    listargs,
+		  },
+		  ...FileWork_file,
+		},
+		,
+		fragment FileWork_file on File {,
+		  id,
+		  works {,
+		    id,
+		    connector {,
+		      name,
+		      id,
+		    },
+		    jobs {,
+		      created_at,
+		      messages,
+		      id,
+		    },
+		    status,
+		    work_type,
+		    created_at,
+		  },
+		}
+
+             """
+            if data is None:
+                data = open(file_name, "rb")
+                mime_type = magic.from_file(file_name, mime=True)
+
+            return self.query(query, {"id":report_id, "file": (File(file_name, data, mime_type))})
+        else:
+            self.log(
+                "error", "[upload] Missing parameters: file_name or data",
+            )
+            return None
+
     # TODO Move to ExternalReference
     def delete_external_reference(self, id):
         logging.info("Deleting + " + id + "...")

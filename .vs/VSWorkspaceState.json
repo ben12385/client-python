@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\pycti",
+    "\\pycti\\api",
+    "\\pycti\\connector",
+    "\\pycti\\entities"
+  ],
+  "SelectedNode": "\\pycti\\api\\opencti_api_client.py",
+  "PreviewInSolutionExplorer": false
+}
